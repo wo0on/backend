@@ -10,7 +10,7 @@ class FeedDB {
         return FeedDB._inst_;
     }
 
-    // #id = 1; #itemCount = 1; #LDataDB = [{ id: 0, title: "test1", content: "Example body" }];
+    //#id = 1; #itemCount = 1; #LDataDB = [{ id: 0, title: "test1", content: "Example body" }];
 
     constructor() { console.log("[Feed-DB] DB Init Completed"); }
 
@@ -40,6 +40,16 @@ class FeedDB {
             return true;
         } catch (e) {
             console.log(`[Feed-DB] Insert Error: ${ e }`);
+            return false;
+        }
+    }
+    changeItem = async ( item ) => {
+        const { cid, ctitle, ccontent } = item;
+        try {
+            const res = await FeedModel.updateOne({_id:cid}, { $set: { title: ctitle, content: ccontent }});
+            return true;
+        } catch (e) {
+            console.log(`[Feed-DB] Update Error: ${ e }`);
             return false;
         }
     }
@@ -80,6 +90,17 @@ router.post('/addFeed', async (req, res) => {
        return res.status(500).json({ error: e });
    }
 });
+
+router.post('/changeFeed', async (req, res) => {
+    try {
+        const { cid, ctitle, ccontent } = req.body;
+        const addResult = await feedDBInst.changeItem({cid, ctitle, ccontent });
+        if (!addResult) return res.status(500).json({ error: "No item change" })
+        else return res.status(200).json({ isOK: true });
+    } catch (e) {
+        return res.status(500).json({ error: e });
+    }
+ });
 
 router.post('/deleteFeed', async (req, res) => {
     try {
