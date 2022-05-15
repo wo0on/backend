@@ -1,5 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
+const AccountModel = require('../models/account');
 
 const router = express.Router();
 
@@ -14,21 +15,27 @@ class BankDB {
 
     constructor() { console.log("[Bank-DB] DB Init Completed"); }
 
-    getBalance = () => {
-        return { success: true, data: this.#total };
+    getBalance = async(item) => {
+        const { name, pwd } = item;
+        const res = await AccountModel.findOne({Name: name, Pwd:pwd});
+        return { success: true, data: res.Total };
     }
 
-    transaction = ( amount ) => {
-        this.#total += amount;
-        return { success: true, data: this.#total };
+    transaction = async( item ) => {
+        const { name, pwd, amount } = item;
+        
+            const taget=await AccountModel.findOne({Name:name, Pwd:pwd});
+            const res =await AccountModel.updateOne({Name: name, Pwd:pwd},{ $set: { Total: taget.Total+amount }});
+        
+        return { success: true, data: res.Total };
     }
 }
 
 const bankDBInst = BankDB.getInst();
 
-router.post('/getInfo', authMiddleware, (req, res) => {
+router.post('/getInfo', authMiddleware, async(req, res) => {
     try {
-        const { success, data } = bankDBInst.getBalance();
+        const { success, data } =await bankDBInst.getBalance({name: req.body.name, pwd: req.body.pwd});
         if (success) return res.status(200).json({ balance: data });
         else return res.status(500).json({ error: data });
     } catch (e) {
@@ -36,10 +43,10 @@ router.post('/getInfo', authMiddleware, (req, res) => {
     }
 });
 
-router.post('/transaction', authMiddleware, (req, res) => {
+router.post('/transaction', authMiddleware, async(req, res) => {
     try {
-        const { amount } = req.body;
-        const { success, data } = bankDBInst.transaction( parseInt(amount) );
+        const { name, pwd, amount } = req.body;
+        const { success, data } = await bankDBInst.transaction( { name: name, pwd: pwd, amount: parseInt(amount)} );
         if (success) res.status(200).json({ success: true, balance: data, msg: "Transaction success" });
         else res.status(500).json({ error: data })
     } catch (e) {

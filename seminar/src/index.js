@@ -14,7 +14,7 @@ const port = process.env.PORT;
 
 app.use(express.json());
 
-const whitelist = ['http://localhost:3000'];
+const whitelist = ['http://localhost:3000', 'http://sparcs.org:46138'];
 const corsOptions = {
     origin: (origin, callback) => {
         console.log('[REQUEST-CORS] Request from origin: ', origin);

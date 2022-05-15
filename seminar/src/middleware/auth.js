@@ -1,5 +1,8 @@
-const authMiddleware = (req, res, next) => {
-    if (req.body.name === process.env.API_NAME&&req.body.pwd===process.env.API_PWD) {
+const AccountModel = require("../models/account");
+
+const authMiddleware = async(req, res, next) => {
+    const res1 = await AccountModel.findOne({Name: req.body.name, Pwd: req.body.pwd});
+    if (res1!==null) {
         console.log("[AUTH-MIDDLEWARE] Authorized User");
         next();
     }
